@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: hal
+      POSTGRES_PASSWORD: hal
+      POSTGRES_DB: hal_nemofinder
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hal -d hal_nemofinder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      HAL_DATABASE_URL: postgresql+asyncpg://hal:hal@postgres:5432/hal_nemofinder
+      HAL_SYNC_DATABASE_URL: postgresql+psycopg2://hal:hal@postgres:5432/hal_nemofinder
+      HAL_REDIS_URL: redis://redis:6379/0
+      HAL_CELERY_BROKER_URL: redis://redis:6379/1
+      HAL_CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A src.tasks.celery_app worker --loglevel=info -Q analysis,verification
+    environment:
+      HAL_DATABASE_URL: postgresql+asyncpg://hal:hal@postgres:5432/hal_nemofinder
+      HAL_SYNC_DATABASE_URL: postgresql+psycopg2://hal:hal@postgres:5432/hal_nemofinder
+      HAL_REDIS_URL: redis://redis:6379/0
+      HAL_CELERY_BROKER_URL: redis://redis:6379/1
+      HAL_CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hal-nemofinder.io/schemas/regression_set.schema.json",
+  "title": "hal-nemoFinder Regression Set",
+  "description": "Schema for a labelled regression set consumed by hal-nemoFinder's CalibrationTracker.  A regression set is a list of factual claims with ground-truth hallucination labels, used to measure classifier accuracy, Brier score, and Expected Calibration Error on a fixed benchmark.  Files may be encoded as a top-level JSON list, a JSONL file (one object per line), or a YAML list.  YAML and JSON files may also wrap the list under a top-level 'claims' key.",
+  "type": "array",
+  "items": { "$ref": "#/definitions/labeled_claim" },
+  "definitions": {
+    "claim_type": {
+      "type": "string",
+      "description": "Which routing bucket this claim falls into.  Determines which verifiers see it.",
+      "enum": [
+        "molecular_property",
+        "target_interaction",
+        "citation",
+        "clinical_outcome",
+        "pharmacokinetic",
+        "mechanism_of_action",
+        "general_biomedical"
+      ]
+    },
+    "labeled_claim": {
+      "type": "object",
+      "description": "One ground-truth-labelled claim.",
+      "required": ["claim_text"],
+      "additionalProperties": false,
+      "properties": {
+        "claim_text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The exact sentence to verify."
+        },
+        "claim_type": {
+          "$ref": "#/definitions/claim_type",
+          "description": "Optional pre-classified type. Defaults to general_biomedical when omitted."
+        },
+        "ground_truth_label": {
+          "type": "boolean",
+          "description": "True if the claim is actually a hallucination, False otherwise.  Either this field or is_hallucination must be provided."
+        },
+        "is_hallucination": {
+          "type": "boolean",
+          "description": "Alias for ground_truth_label.  Either this field or ground_truth_label must be provided."
+        },
+        "source": {
+          "type": "string",
+          "description": "Provenance tag (e.g. 'expert_review', 'historical_incident', 'synthetic')."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form reviewer annotation or rationale."
+        }
+      },
+      "anyOf": [
+        { "required": ["ground_truth_label"] },
+        { "required": ["is_hallucination"] }
+      ]
+    }
+  }
+}

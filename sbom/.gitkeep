@@ -1,0 +1,2 @@
+# SBOM output directory. Generated files live here; keep the
+# directory under version control so CI can always write to it.

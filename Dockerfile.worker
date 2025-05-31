@@ -1,0 +1,82 @@
+# syntax=docker/dockerfile:1.6
+# ---------------------------------------------------------------------------
+# hal-nemoFinder — worker image
+#
+# Identical build pipeline to Dockerfile.prod; the only functional
+# difference is the default command which launches a Celery worker
+# via the hal-nemofinder CLI.
+# ---------------------------------------------------------------------------
+
+ARG PYTHON_VERSION=3.11
+ARG APP_VERSION=0.1.0
+
+FROM python:${PYTHON_VERSION}-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        gcc g++ libpq-dev python3-dev make \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+COPY pyproject.toml README.md ./
+COPY src/ src/
+COPY alembic/ alembic/
+COPY alembic.ini ./
+
+RUN pip install --no-cache-dir --prefix=/install .
+RUN python -m compileall -q /install/lib /build/src || true
+
+# ---------------------------------------------------------------------------
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+ARG APP_VERSION
+ARG VCS_REF=unknown
+ARG BUILD_DATE=unknown
+
+LABEL org.opencontainers.image.title="hal-nemofinder-worker" \
+      org.opencontainers.image.description="Hallucination detection framework — Celery worker" \
+      org.opencontainers.image.source="https://github.com/hal-nemofinder/hal-nemofinder" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.licenses="MIT"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app \
+    HAL_VERSION=${APP_VERSION}
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        libpq5 tini curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && apt-get clean
+
+RUN groupadd --system --gid 10001 hal \
+ && useradd  --system --uid 10001 --gid 10001 --home /app --shell /sbin/nologin hal
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+COPY --chown=hal:hal src/         /app/src/
+COPY --chown=hal:hal alembic/     /app/alembic/
+COPY --chown=hal:hal alembic.ini  /app/alembic.ini
+COPY --chown=hal:hal pyproject.toml /app/pyproject.toml
+
+RUN mkdir -p /app/tmp /app/run /home/hal \
+ && chown -R hal:hal /app /home/hal
+
+USER 10001:10001
+
+# Workers have no HTTP socket; use celery inspect as the liveness probe.
+HEALTHCHECK --interval=60s --timeout=10s --start-period=45s --retries=3 \
+    CMD hal-nemofinder worker-healthcheck || exit 1
+
+ENTRYPOINT ["/usr/bin/tini", "--", "hal-nemofinder"]
+CMD ["worker", "--queues", "analysis,verification", "--concurrency", "4"]

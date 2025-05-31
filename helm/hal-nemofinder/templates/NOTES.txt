@@ -1,0 +1,46 @@
+  __  __          __       _                   _____ _           __
+ / / / /___ _/ /      / | / ___  ____ ___  ____ / ___/(_)___  ____/ /__  _____
+/ /_/ / __ `/ /_____/  |/ / _ \/ __ `__ \/ __ \\__ \/ / __ \/ __  / _ \/ ___/
+\__,_/\__,_/_/_____/ /|  /  __/ / / / / / /_/ /__/ / / / / / /_/ /  __/ /
+                  /_/ |_/\___/_/ /_/ /_/\____/____/_/_/ /_/\__,_/\___/_/
+
+Chart:   {{ .Chart.Name }}-{{ .Chart.Version }}
+Release: {{ .Release.Name }} (namespace: {{ .Release.Namespace }})
+App:     {{ .Chart.AppVersion }}
+
+-----------------------------------------------------------------------------
+1. Wait for the pods to be ready:
+
+    kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "hal-nemofinder.fullname" . }}-api
+    kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "hal-nemofinder.fullname" . }}-worker
+
+2. Verify the database migrations succeeded:
+
+    kubectl -n {{ .Release.Namespace }} logs job/{{ include "hal-nemofinder.fullname" . }}-migrate-{{ .Release.Revision }}
+
+3. Hit the API:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+    https://{{ .host }}/api/v1/health/live
+{{- end }}
+{{- else }}
+    kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "hal-nemofinder.fullname" . }}-api {{ .Values.api.service.port }}:{{ .Values.api.service.port }}
+    curl http://localhost:{{ .Values.api.service.port }}/api/v1/health/live
+{{- end }}
+
+4. Bootstrap the first admin tenant (only needed once):
+
+    kubectl -n {{ .Release.Namespace }} exec deploy/{{ include "hal-nemofinder.fullname" . }}-api -- \
+      hal-nemofinder auth bootstrap --tenant acme --admin-email ops@example.com
+
+-----------------------------------------------------------------------------
+PRODUCTION CHECKLIST
+  [ ] postgresql.enabled=false + externalDatabase pointed at managed Postgres
+  [ ] redis.enabled=false + externalRedis pointed at managed Redis (TLS)
+  [ ] audit.hmacKeySecret set to a Vault/external-secrets-managed Secret
+  [ ] auth.required=true and auth.oidc.* configured
+  [ ] networkPolicy.enabled=true
+  [ ] serviceMonitor.enabled=true and PrometheusRule alerts loaded
+  [ ] ingress configured with TLS (cert-manager)
+  [ ] Backup CronJob scheduled (see docs/operations/RUNBOOK.md)
+-----------------------------------------------------------------------------

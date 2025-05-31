@@ -1,0 +1,38 @@
+apiVersion: v2
+name: hal-nemofinder
+description: Hallucination detection framework for AI-driven drug discovery
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.25.0-0"
+home: https://github.com/hal-nemofinder/hal-nemofinder
+sources:
+  - https://github.com/hal-nemofinder/hal-nemofinder
+icon: https://raw.githubusercontent.com/hal-nemofinder/hal-nemofinder/main/docs/logo.png
+keywords:
+  - hallucination-detection
+  - llm
+  - drug-discovery
+  - cheminformatics
+  - verification
+  - ai-safety
+maintainers:
+  - name: hal-nemoFinder contributors
+    url: https://github.com/hal-nemofinder/hal-nemofinder
+annotations:
+  category: AI
+  licenses: MIT
+dependencies:
+  - name: postgresql
+    version: "15.5.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+    tags:
+      - database
+  - name: redis
+    version: "19.6.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+    tags:
+      - cache
+      - broker

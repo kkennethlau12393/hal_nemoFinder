@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hal-nemofinder.fullname" . }}-config
+  labels:
+    {{- include "hal-nemofinder.labels" . | nindent 4 }}
+data:
+  HAL_LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  HAL_LOG_FORMAT: {{ .Values.config.logFormat | quote }}
+  HAL_ENVIRONMENT: {{ .Values.config.environment | quote }}
+  HAL_CACHE_TTL_SECONDS: {{ .Values.config.cacheTtlSeconds | quote }}
+  HAL_VERIFICATION_TIMEOUT_SECONDS: {{ .Values.config.verificationTimeoutSeconds | quote }}
+  HAL_CONFIDENCE_THRESHOLD: {{ .Values.config.confidenceThreshold | quote }}
+  HAL_ENABLE_EMBEDDINGS: {{ .Values.config.enableEmbeddings | quote }}
+  HAL_RATE_LIMIT_ENABLED: {{ .Values.config.rateLimit.enabled | quote }}
+  HAL_RATE_LIMIT_RPM: {{ .Values.config.rateLimit.rpm | quote }}
+  HAL_RATE_LIMIT_ANALYZE_PM: {{ .Values.config.rateLimit.analyzePerMinute | quote }}
+  HAL_AUTH_REQUIRED: {{ .Values.auth.required | quote }}
+  {{- if .Values.auth.oidc.issuer }}
+  HAL_OIDC_ISSUER: {{ .Values.auth.oidc.issuer | quote }}
+  HAL_OIDC_CLIENT_ID: {{ .Values.auth.oidc.clientId | quote }}
+  HAL_OIDC_AUDIENCE: {{ .Values.auth.oidc.audience | quote }}
+  {{- end }}
+  {{- if .Values.plugins.enabled }}
+  HAL_PLUGIN_MODULES: {{ join "," .Values.plugins.modules | quote }}
+  HAL_PLUGIN_FILES: {{ join "," .Values.plugins.files | quote }}
+  {{- end }}
+  HAL_DATABASE_URL: "postgresql+asyncpg://{{ include "hal-nemofinder.databaseUser" . }}:$(DATABASE_PASSWORD)@{{ include "hal-nemofinder.databaseHost" . }}:5432/{{ include "hal-nemofinder.databaseName" . }}"
+  HAL_SYNC_DATABASE_URL: "postgresql+psycopg2://{{ include "hal-nemofinder.databaseUser" . }}:$(DATABASE_PASSWORD)@{{ include "hal-nemofinder.databaseHost" . }}:5432/{{ include "hal-nemofinder.databaseName" . }}"

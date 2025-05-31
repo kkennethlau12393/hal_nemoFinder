@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hal-nemofinder.fullname" . }}-worker
+  labels:
+    {{- include "hal-nemofinder.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      {{- include "hal-nemofinder.worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hal-nemofinder.worker.selectorLabels" . | nindent 8 }}
+        {{- with .Values.worker.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.worker.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "hal-nemofinder.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.worker.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: {{ include "hal-nemofinder.workerImage" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.worker.command }}
+          command: {{ toYaml .Values.worker.command | nindent 12 }}
+          {{- end }}
+          args:
+            {{- if .Values.worker.args }}
+            {{- toYaml .Values.worker.args | nindent 12 }}
+            {{- else }}
+            - worker
+            - --queues
+            - {{ .Values.worker.queues | quote }}
+            - --concurrency
+            - {{ .Values.worker.concurrency | quote }}
+            {{- end }}
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hal-nemofinder.databaseSecretName" . }}
+                  key: {{ include "hal-nemofinder.databaseSecretKey" . }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-redis
+                  key: redis-password
+            - name: HAL_REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@{{ .Release.Name }}-redis-master:6379/0"
+            - name: HAL_CELERY_BROKER_URL
+              value: "redis://:$(REDIS_PASSWORD)@{{ .Release.Name }}-redis-master:6379/1"
+            - name: HAL_CELERY_RESULT_BACKEND
+              value: "redis://:$(REDIS_PASSWORD)@{{ .Release.Name }}-redis-master:6379/2"
+            {{- end }}
+            {{- if .Values.audit.enabled }}
+            - name: HAL_AUDIT_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-dev" (include "hal-nemofinder.fullname" .)) .Values.audit.hmacKeySecret }}
+                  key: {{ .Values.audit.hmacKeySecretKey }}
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "hal-nemofinder.fullname" . }}-config
+            {{- if .Values.envFromSecret }}
+            - secretRef:
+                name: {{ .Values.envFromSecret }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                # Give running tasks a chance to finish before SIGTERM.
+                command: ["sh", "-c", "sleep 15"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: app-tmp
+              mountPath: /app/tmp
+            - name: app-run
+              mountPath: /app/run
+            {{- if .Values.plugins.pvc }}
+            - name: plugins
+              mountPath: /plugins
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: app-tmp
+          emptyDir: {}
+        - name: app-run
+          emptyDir: {}
+        {{- if .Values.plugins.pvc }}
+        - name: plugins
+          persistentVolumeClaim:
+            claimName: {{ .Values.plugins.pvc }}
+        {{- end }}

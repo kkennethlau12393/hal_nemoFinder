@@ -1,0 +1,54 @@
+# Example customer configuration for hal_nemoFinder.
+#
+# Place this file at /etc/hal_nemofinder/hal_nemofinder.yaml or point
+# HAL_CONFIG_FILE at it. Every field below can also be supplied via
+# HAL_<UPPERCASE_NAME> environment variables; env vars always win.
+
+database:
+  url: postgresql+asyncpg://prod-user:prod-password@db.internal.acme.com:5432/hal
+
+redis_url: redis://redis.internal.acme.com:6379/0
+celery_broker_url: redis://redis.internal.acme.com:6379/1
+celery_result_backend: redis://redis.internal.acme.com:6379/2
+
+# Plugin discovery ---------------------------------------------------------
+
+plugins:
+  modules:
+    - acme_plugins.verifiers
+    - acme_plugins.kb_clients
+  files:
+    - /opt/acme/custom_extractor.py
+
+# Drop-in replacements for built-in KB clients. The value is the dotted
+# Python path of a class implementing the same interface as the original.
+kb_client_overrides:
+  pubchem: acme_plugins.kb_clients.AcmeCompoundDB
+  chembl: acme_plugins.kb_clients.AcmeBioactivityDB
+
+# Verifier reliability overrides -------------------------------------------
+# Keys match source_db strings emitted by verifiers. Values are the
+# calibrated sensitivity/specificity from your own regression runs.
+verifier_reliability_overrides:
+  chemical:
+    sensitivity: 0.97
+    specificity: 0.94
+  acme_internal_library:
+    sensitivity: 0.96
+    specificity: 0.99
+  acme_assay_data:
+    sensitivity: 0.91
+    specificity: 0.88
+
+# Regression sets ----------------------------------------------------------
+# Each file is parsed at `hal-nemofinder calibrate` time. Supports
+# .json / .jsonl / .yaml / .yml. See src/core/regression_set_schema.json.
+regression_set_paths:
+  - /opt/acme/regression/validated_claims.jsonl
+  - /opt/acme/regression/recent_hallucinations.json
+
+# Tuning -------------------------------------------------------------------
+cache_ttl_seconds: 7200
+verification_timeout_seconds: 45
+confidence_threshold: 0.75
+enable_embeddings: true

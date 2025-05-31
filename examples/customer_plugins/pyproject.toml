@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "acme-hal-plugins"
+version = "1.0.0"
+description = "Acme Corp's proprietary hal_nemoFinder plugin pack."
+readme = "README.md"
+license = "Proprietary"
+requires-python = ">=3.11"
+
+# hal_nemofinder is the host framework; every plugin depends on it.
+dependencies = [
+    "hal-nemofinder>=0.1.0",
+]
+
+[project.entry-points."hal_nemofinder.verifiers"]
+acme_internal_library = "acme_plugins.verifiers:AcmeInternalLibraryVerifier"
+acme_assay_data = "acme_plugins.verifiers:AcmeAssayDataVerifier"
+
+[project.entry-points."hal_nemofinder.knowledge_clients"]
+acme_compound_db = "acme_plugins.kb_clients:AcmeCompoundDB"
+acme_bioactivity_db = "acme_plugins.kb_clients:AcmeBioactivityDB"
+
+[tool.hatch.build.targets.wheel]
+packages = ["acme_plugins"]

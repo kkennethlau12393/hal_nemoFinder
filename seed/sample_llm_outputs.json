@@ -1,0 +1,157 @@
+[
+  {
+    "id": "sample-001",
+    "title": "Aspirin analysis (mixed correct and hallucinated)",
+    "text": "Aspirin (acetylsalicylic acid) is one of the most widely used nonsteroidal anti-inflammatory drugs (NSAIDs). Its canonical SMILES representation is CC(=O)Oc1ccccc1C(O)=O and it has a molecular weight of 220.3 g/mol. Aspirin exerts its pharmacological effects primarily through irreversible inhibition of cyclooxygenase enzymes COX-1 and COX-2, leading to decreased prostaglandin synthesis. The compound was first synthesized by Felix Hoffmann at Bayer in 1897. A comprehensive meta-analysis by Antithrombotic Trialists' Collaboration published in The Lancet (DOI: 10.1016/S0140-6736(09)60503-1) demonstrated significant cardiovascular benefits of low-dose aspirin therapy. Aspirin exhibits a logP of 1.2, a topological polar surface area of 63.6 A^2, and oral bioavailability of approximately 68%. It is rapidly absorbed from the gastrointestinal tract with peak plasma concentrations reached within 1-2 hours.",
+    "known_hallucinations": [
+      {
+        "type": "molecular_property",
+        "description": "Molecular weight stated as 220.3 g/mol; actual molecular weight of aspirin is 180.16 g/mol",
+        "severity": "major"
+      }
+    ]
+  },
+  {
+    "id": "sample-002",
+    "title": "Fabricated compound with invalid chemistry",
+    "text": "The novel compound BX-7219 (SMILES: CC(=O)Nc1ccc(O)c(C(=O)[N+]2(CC3=NOG)CCC2)c1) has demonstrated exceptional binding affinity for the XKRZ-7 receptor, a recently characterized transmembrane protein implicated in neuroinflammatory signaling cascades. In vitro assays revealed an IC50 of 3.2 nM against XKRZ-7, with an oral bioavailability of 150% in Sprague-Dawley rats following a 10 mg/kg single dose. The molecular weight is 347.2 g/mol with a logP of 2.8. As reported by Zhang et al. (DOI: 10.1234/fake.2024.001), BX-7219 showed dose-dependent reduction of IL-6 levels in a murine collagen-induced arthritis model. A follow-up study (DOI: 10.1234/fake.2024.002) confirmed its selectivity over 400 kinases in a KINOMEscan panel. The compound is currently in IND-enabling studies with Phase I trials expected to begin in Q3 2025.",
+    "known_hallucinations": [
+      {
+        "type": "molecular_property",
+        "description": "SMILES string is invalid - contains 'G' which is not a valid atom symbol in SMILES, and the ring closure syntax is malformed",
+        "severity": "critical"
+      },
+      {
+        "type": "target_interaction",
+        "description": "XKRZ-7 receptor does not exist; it is a completely fabricated protein target",
+        "severity": "critical"
+      },
+      {
+        "type": "pharmacokinetic",
+        "description": "Oral bioavailability of 150% is physically impossible; bioavailability cannot exceed 100%",
+        "severity": "critical"
+      },
+      {
+        "type": "citation",
+        "description": "DOI 10.1234/fake.2024.001 is fabricated and does not resolve to any real publication",
+        "severity": "major"
+      },
+      {
+        "type": "citation",
+        "description": "DOI 10.1234/fake.2024.002 is fabricated and does not resolve to any real publication",
+        "severity": "major"
+      }
+    ]
+  },
+  {
+    "id": "sample-003",
+    "title": "Metformin with hallucinated clinical trial",
+    "text": "Metformin hydrochloride (SMILES: CN(C)C(=N)NC(=N)N) is the first-line pharmacotherapy for type 2 diabetes mellitus, prescribed to over 150 million people worldwide. Metformin functions primarily as a selective JAK2/STAT3 kinase inhibitor, blocking downstream phosphorylation cascades that regulate hepatic glucose output. Its molecular weight is 129.16 g/mol and it has exceptionally low protein binding (<10%). A landmark Phase IV clinical trial (NCT99999999) conducted across 38 centers in Europe demonstrated that metformin monotherapy reduced HbA1c by 4.2% over 12 weeks, a substantially larger effect than any previously reported antidiabetic agent. Notably, this same trial found that metformin had no effect on fasting plasma glucose levels despite the dramatic HbA1c reduction. The drug is cleared renally with a half-life of approximately 5 hours. Metformin has also shown promising anti-cancer properties through activation of the AMPK pathway, as reported in multiple preclinical studies.",
+    "known_hallucinations": [
+      {
+        "type": "mechanism_of_action",
+        "description": "Metformin is NOT a JAK2/STAT3 kinase inhibitor. Its primary mechanism is AMPK activation and inhibition of hepatic gluconeogenesis via mitochondrial complex I inhibition",
+        "severity": "critical"
+      },
+      {
+        "type": "clinical_outcome",
+        "description": "NCT99999999 is a fabricated clinical trial identifier that does not exist in ClinicalTrials.gov",
+        "severity": "major"
+      },
+      {
+        "type": "clinical_outcome",
+        "description": "HbA1c reduction of 4.2% in 12 weeks is implausibly large; typical metformin monotherapy reduces HbA1c by 1.0-1.5%",
+        "severity": "major"
+      },
+      {
+        "type": "general_biomedical",
+        "description": "Internal contradiction: claims metformin had 'no effect on fasting plasma glucose' while simultaneously claiming a 4.2% HbA1c reduction, which is physiologically contradictory since HbA1c reflects average glucose levels",
+        "severity": "critical"
+      }
+    ]
+  },
+  {
+    "id": "sample-004",
+    "title": "Ibuprofen with wrong properties",
+    "text": "Ibuprofen (SMILES: CC(C)Cc1ccc(C(C)C(O)=O)cc1) is a widely prescribed NSAID belonging to the propionic acid class. It has a molecular weight of 206.28 g/mol and a logP of 5.8, making it highly lipophilic. Ibuprofen acts as an irreversible covalent inhibitor of the COX-2 active site, forming a stable thioether bond with Cys526 at the enzyme's catalytic center. This mechanism distinguishes it from other NSAIDs that bind reversibly. In a pivotal Phase III randomized controlled trial (the PRECISION trial), ibuprofen was shown to be statistically superior to both celecoxib and naproxen in cardiovascular safety, with a 45% reduction in MACE events (p < 0.001). The drug exhibits linear pharmacokinetics across the therapeutic dose range of 200-800 mg, with an oral bioavailability of approximately 80% and a plasma half-life of 2-4 hours. Ibuprofen is extensively metabolized by CYP2C9 and CYP2C19 to inactive hydroxylated metabolites.",
+    "known_hallucinations": [
+      {
+        "type": "molecular_property",
+        "description": "logP of 5.8 is incorrect; the actual logP of ibuprofen is approximately 3.97",
+        "severity": "major"
+      },
+      {
+        "type": "mechanism_of_action",
+        "description": "Ibuprofen is a REVERSIBLE, competitive inhibitor of COX-1 and COX-2, not an irreversible covalent inhibitor. It does not form a thioether bond with Cys526. Aspirin is the NSAID that irreversibly acetylates COX",
+        "severity": "critical"
+      },
+      {
+        "type": "clinical_outcome",
+        "description": "The PRECISION trial (a real trial) actually showed non-inferiority of celecoxib to ibuprofen and naproxen for cardiovascular safety, NOT superiority of ibuprofen. There was no 45% MACE reduction",
+        "severity": "critical"
+      }
+    ]
+  },
+  {
+    "id": "sample-005",
+    "title": "Completely fabricated drug Nexovarin",
+    "text": "Nexovarin (INN: nexovarinium mesylate; SMILES: CC1(C)OC2=C(C=C3N=CN(C4CCN(C(=O)C5=CC=C(F)C(Cl)=C5)CC4)C3=N2)C(=O)N1CCOCC) is a first-in-class dual PROTEX-alpha/RNKL-9 inhibitor developed by Meridian Pharmaceuticals for the treatment of platinum-resistant ovarian carcinoma. The compound has a molecular weight of 523.4 g/mol, a logP of 3.1, and topological polar surface area of 98.7 A^2. Nexovarin achieves >99.7% oral bioavailability in humans and has a remarkably long terminal half-life of 380 hours, allowing once-monthly oral dosing. In the landmark AURORA-7 Phase III trial (n=1,842), nexovarin demonstrated an unprecedented overall survival benefit of 18.3 months over standard of care (HR 0.12, 95% CI 0.08-0.18, p < 0.0001), as published by Richardson et al. in the New England Journal of Medicine (DOI: 10.1056/NEJMoa2387654) and confirmed by Takahashi et al. (DOI: 10.1038/s41586-024-08122-4). The drug received FDA breakthrough therapy designation in January 2025 and was subsequently granted accelerated approval in March 2025 under the brand name Nexovar. Nexovarin also inhibits the ZMTH-3 kinase (Ki = 0.4 pM) and activates the orphan nuclear receptor FXR-beta2, providing dual antitumor and immunomodulatory effects. Post-marketing surveillance has confirmed a clean safety profile with no treatment-emergent adverse events reported in over 15,000 treated patients.",
+    "known_hallucinations": [
+      {
+        "type": "molecular_property",
+        "description": "Nexovarin is a completely fabricated drug; it does not exist in any drug database or pharmaceutical pipeline",
+        "severity": "critical"
+      },
+      {
+        "type": "molecular_property",
+        "description": "The SMILES string, while syntactically complex, describes a fabricated molecular structure with no known pharmacological characterization",
+        "severity": "critical"
+      },
+      {
+        "type": "target_interaction",
+        "description": "PROTEX-alpha and RNKL-9 are fabricated protein targets that do not exist",
+        "severity": "critical"
+      },
+      {
+        "type": "target_interaction",
+        "description": "ZMTH-3 kinase and FXR-beta2 orphan nuclear receptor are fabricated targets",
+        "severity": "critical"
+      },
+      {
+        "type": "pharmacokinetic",
+        "description": "99.7% oral bioavailability is unrealistically high for a small molecule of this complexity; virtually no oral drugs achieve this",
+        "severity": "major"
+      },
+      {
+        "type": "pharmacokinetic",
+        "description": "Terminal half-life of 380 hours (nearly 16 days) is extraordinarily unusual and not substantiated",
+        "severity": "major"
+      },
+      {
+        "type": "clinical_outcome",
+        "description": "The AURORA-7 trial is fabricated; an 18.3-month OS benefit with HR 0.12 would be unprecedented in oncology",
+        "severity": "critical"
+      },
+      {
+        "type": "citation",
+        "description": "DOI 10.1056/NEJMoa2387654 is fabricated and does not correspond to any NEJM publication",
+        "severity": "major"
+      },
+      {
+        "type": "citation",
+        "description": "DOI 10.1038/s41586-024-08122-4 is fabricated and does not correspond to any Nature publication",
+        "severity": "major"
+      },
+      {
+        "type": "clinical_outcome",
+        "description": "Claim of zero treatment-emergent adverse events in 15,000 patients is statistically impossible for any pharmacologically active compound",
+        "severity": "critical"
+      },
+      {
+        "type": "general_biomedical",
+        "description": "Meridian Pharmaceuticals is a fabricated company name not associated with any known pharmaceutical entity in this context",
+        "severity": "minor"
+      }
+    ]
+  }
+]
